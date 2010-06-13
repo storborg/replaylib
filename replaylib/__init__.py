@@ -35,28 +35,28 @@ def start_record():
     # Install recording httplib stub.
 
 
+def stop_record_obj():
+    global record, current
+    if not record:
+        raise StateError("Not currently recording.")
+    record = False
+    copy, current = current, {}
+
+    # Return httplib to original state.
+
+    return copy
+
+
 def stop_record(fname):
     """
     Close the current recording, return httplib to its normal state, and save
     the recording to fname.
     """
-    global record, current
-    if not record:
-        raise StateError("Not currently recording.")
-    record = False
-
     with open(fname, 'w') as f:
-        pickle.dump(current, f)
-    current = {}
-
-    # Return httplib to original state.
+        pickle.dump(stop_record_obj(), f)
 
 
-def start_playback(fname):
-    """
-    Install an httplib wrapper that intercepts calls and returns response as
-    based on the recording being played back from.
-    """
+def start_playback_obj(obj):
     global record, playback, current
     if record:
         raise StateError("Currently recording.")
@@ -64,10 +64,16 @@ def start_playback(fname):
         raise StateError("Already playing back.")
     playback = True
 
-    with open(fname, 'r') as f:
-        current = pickle.load(f)
-
     # Install playback httplib stub.
+
+
+def start_playback(fname):
+    """
+    Install an httplib wrapper that intercepts calls and returns response as
+    based on the recording being played back from.
+    """
+    with open(fname, 'r') as f:
+        start_playback_obj(pickle.load(f))
 
 
 def stop_playback():
