@@ -7,7 +7,8 @@ from cStringIO import StringIO
 import replaylib
 
 class RecordingHTTPResponse(httplib.HTTPResponse):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        httplib.HTTPResponse(*args, **kwargs)
         self.record_handle = replaylib.current.start_response(self.req_hash)
 
     def begin(self):
@@ -52,6 +53,7 @@ def recording_connection(base_class):
     class RecordingConnection(base_class):
         def __init__(self, *args, **kwargs):
             base_class.__init__(self, *args, **kwargs)
+            self.response_class = RecordingHTTPResponse
             self.req = RecordingHTTPRequest()
 
         def _output(self, s):
