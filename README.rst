@@ -41,4 +41,14 @@ Example
     >>> urllib.urlopen('http://www.google.com')
     >>> replaylib.stop_playback()
 
+Nose Plugin
+===========
+
+ReplayLib also comes with a nose plugin to make recording and playing back the
+interactions used by your test suites even simpler::
+
+    $ nosetests --replaylib-record=test.pkl
+    $ nosetests --replaylib-playback=test.pkl
+
+
 .. # vim: syntax=rst expandtab tabstop=4 shiftwidth=4 shiftround
