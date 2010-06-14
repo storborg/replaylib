@@ -1,3 +1,5 @@
+import sys
+
 from unittest import TestCase
 import urllib
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
@@ -31,33 +33,65 @@ class ReferenceServer(Thread):
         httpd.serve_forever()
 
 
+server = ReferenceServer()
+server.start()
+
+
 class ReplayFunctionalityTest(TestCase):
 
-    def test_single(self):
-        replaylib.start_record()
+    def tearDown(self):
+        replaylib.reset()
 
-        server = ReferenceServer()
-        server.start()
-
-        # Do some httplib or urllib shit here.
-        webf = urllib.urlopen('http://localhost:%d' % PORT)
-        real_buf = webf.read()
+    def _grab(self, path=''):
+        sys.stderr.write("doing grab [%s]\n" % path)
+        webf = urllib.urlopen('http://localhost:%d/%s' % (PORT, path))
+        buf = webf.read()
         webf.close()
+        sys.stderr.write("done\n")
+        return buf
 
+    def _with_actions(self, func):
+        replaylib.start_record()
+        real_compare = func()
         data = replaylib.stop_record_obj()
-        
+
         assert len(data.map) > 0
 
         replaylib.start_playback_obj(data)
-
-        # Do the same httplib shit again.
-        webf = urllib.urlopen('http://localhost:%d' % PORT)
-        fake_buf = webf.read()
-        webf.close()
-
+        fake_compare = func()
         replaylib.stop_playback()
 
-        assert real_buf == fake_buf
+        assert real_compare == fake_compare
+
+    def test_single(self):
+        def func():
+            return self._grab()
+        self._with_actions(func)
+
+    def test_multiple(self):
+        def func():
+            ret = []
+            ret.append(self._grab())
+            ret.append(self._grab())
+            return ret
+        self._with_actions(func)
+
+    def test_different_single(self):
+        def func():
+            ret = []
+            ret.append(self._grab('foo'))
+            ret.append(self._grab('bar'))
+            return ret
+        self._with_actions(func)
+
+    def test_different_multiple(self):
+        def func():
+            ret = []
+            ret.append(self._grab('foo'))
+            ret.append(self._grab('bar'))
+            ret.append(self._grab('foo'))
+            ret.append(self._grab('baz'))
+        self._with_actions(func)
 
 
 class ReplayStateTest(TestCase):
