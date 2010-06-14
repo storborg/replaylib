@@ -31,8 +31,15 @@ class ReplayData(object):
 
     def __init__(self):
         self.map = defaultdict(list)
+        self.playback_pos = defaultdict(int)
 
     def start_response(self, hash):
         resp = ReplayDataResponse()
         self.map[hash].append(resp)
         return resp
+
+    def get_next_response(self, hash):
+        pos = self.playback_pos[hash]
+        response = self.map[hash][pos]
+        self.playback_pos[hash] += 1
+        return response
