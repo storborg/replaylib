@@ -9,6 +9,7 @@ log = logging.getLogger(__name__)
 class ReplayLibPlugin(Plugin):
     enabled = False
     name = "replaylib"
+    score = 0
     
     def options(self, parser, env=os.environ):
         "Add options to nosetests."
@@ -25,23 +26,19 @@ class ReplayLibPlugin(Plugin):
 
     def configure(self, options, config):
         Plugin.configure(self, options, config)
-        if options.record_filename and options.playback_filename:
-            self.enabled = False
-            log.error("Cannot record and playback at the same time. "
-                      "Replaylib will not be enabled.")
-            return
-        self.enabled = True
         self.record_filename = options.record_filename
         self.playback_filename = options.playback_filename
+        if self.record_filename or self.playback_filename:
+            self.enabled = True
 
     def begin(self):
-        if self.record_filename:
-            replaylib.start_record()
-        elif self.playback_filename:
+        if self.playback_filename:
             replaylib.start_playback(self.playback_filename)
+        else:
+            replaylib.start_record()
 
     def report(self, stream):
-        if self.record_filename:
-            replaylib.stop_record(self.record_filename)
-        elif self.playback_filename:
+        if self.playback_filename:
             replaylib.stop_playback()
+        else:
+            replaylib.stop_record(self.record_filename)
