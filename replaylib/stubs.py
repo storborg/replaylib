@@ -93,9 +93,9 @@ def recording_connection(base_class):
         def send(self, s):
             if self.sent_headers:
                 self.req.add_body(s)
-
-            if getattr(self, state_attr) == httplib._CS_REQ_SENT:
-                self.sent_headers = True
+                
+            assert getattr(self, state_attr) == httplib._CS_REQ_SENT
+            self.sent_headers = True
             return base_class.send(self, s)
 
         def getresponse(self):
@@ -131,8 +131,8 @@ def playing_connection(base_class):
             return
 
         def send(self, s):
-            if getattr(self, state_attr) == httplib._CS_REQ_SENT:
-                self.req.add_body(s)
+            assert getattr(self, state_attr) == httplib._CS_REQ_SENT
+            self.req.add_body(s)
 
         def getresponse(self):
             req_hash = self.req.hash
