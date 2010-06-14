@@ -29,8 +29,14 @@ class RecordingHTTPResponse(httplib.HTTPResponse):
         self.record_handle.rec_body(s)
         return s
 
+    def close(self):
+        try:
+            self.fp = self._fp
+            httplib.HTTPResponse.close(self)
+        finally:
+            self.fp = self
+
     def readline(self, *args, **kwargs):
-        "Hack so that someone"
         line = self._fp.readline(*args, **kwargs)
         self.record_handle.rec_body(line)
         return line
@@ -41,18 +47,11 @@ class RecordingHTTPResponse(httplib.HTTPResponse):
             self.record_handle.rec_body(l)
         return lines
 
-    def close(self):
-        try:
-            self.fp = self._fp
-            httplib.HTTPResponse.close(self)
-        finally:
-            self.fp = self
-
 
 class RecordingHTTPRequest(object):
 
-    def __init__(self):
-        self.head_buffer = []
+    def __init__(self, host, port):
+        self.head_buffer = [host, str(port)]
         self.body_buffer = []
         self.response_class = RecordingHTTPResponse
 
@@ -84,7 +83,7 @@ def recording_connection(base_class):
         def __init__(self, *args, **kwargs):
             base_class.__init__(self, *args, **kwargs)
             self.response_class = RecordingHTTPResponse
-            self.req = RecordingHTTPRequest()
+            self.req = RecordingHTTPRequest(self.host, self.port)
             self.sent_headers = False
 
         def _output(self, s):
@@ -120,7 +119,7 @@ def playing_connection(base_class):
 
         def __init__(self, *args, **kwargs):
             base_class.__init__(self, *args, **kwargs)
-            self.req = RecordingHTTPRequest()
+            self.req = RecordingHTTPRequest(self.host, self.port)
 
         def connect(self):
             return
