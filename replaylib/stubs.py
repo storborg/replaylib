@@ -154,7 +154,7 @@ class PlayingHTTPResponse(object):
         self.reason = r.reason
         self.msg = r.headers
 
-        self.body = StringIO("".join(r.body))
+        self.body = StringIO(r.body)
         self.fp = self.body
 
     def getheader(self, name, default=None):
