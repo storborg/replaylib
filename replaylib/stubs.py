@@ -8,16 +8,18 @@ import replaylib
 
 
 class RecordingHTTPResponse(httplib.HTTPResponse):
+
     def __init__(self, *args, **kwargs):
         httplib.HTTPResponse.__init__(self, *args, **kwargs)
         self.record_handle = None
         self._fp = self.fp
-        
+
     def init_recording(self, req_hash):
         self.record_handle = replaylib.current.start_response(req_hash)
-        self.record_handle.rec_start(self.version, self.status, self.reason, self.msg)
+        self.record_handle.rec_start(self.version, self.status,
+                                     self.reason, self.msg)
         self.fp = self
-        
+
     def read(self, amt=None):
         try:
             self.fp = self._fp
@@ -32,7 +34,7 @@ class RecordingHTTPResponse(httplib.HTTPResponse):
         line = self._fp.readline(*args, **kwargs)
         self.record_handle.rec_body(line)
         return line
-    
+
     def readlines(self, *args, **kwargs):
         lines = self._fp.readlines(*args, **kwargs)
         for l in lines:
@@ -46,8 +48,9 @@ class RecordingHTTPResponse(httplib.HTTPResponse):
         finally:
             self.fp = self
 
-    
+
 class RecordingHTTPRequest(object):
+
     def __init__(self):
         self.head_buffer = []
         self.body_buffer = []
@@ -71,12 +74,13 @@ class RecordingHTTPRequest(object):
             body = sorted(urlparse.parse_qsl(req_body))
             req_body = urllib.urlencode(body)
         return hashlib.md5(req_head + req_body).digest()
-        
+
 
 def recording_connection(base_class):
     state_attr = "_%s__state" % base_class.__name__
-    
+
     class RecordingConnection(base_class):
+
         def __init__(self, *args, **kwargs):
             base_class.__init__(self, *args, **kwargs)
             self.response_class = RecordingHTTPResponse
@@ -90,7 +94,7 @@ def recording_connection(base_class):
         def send(self, s):
             if self.sent_headers:
                 self.req.add_body(s)
-                
+
             if getattr(self, state_attr) == httplib._CS_REQ_SENT:
                 self.sent_headers = True
             return base_class.send(self, s)
@@ -113,6 +117,7 @@ def playing_connection(base_class):
     state_attr = "_%s__state" % base_class.__name__
 
     class PlayingConnection(httplib.HTTPConnection):
+
         def __init__(self, *args, **kwargs):
             base_class.__init__(self, *args, **kwargs)
             self.req = RecordingHTTPRequest()
@@ -133,25 +138,26 @@ def playing_connection(base_class):
         def getresponse(self):
             req_hash = self.req.hash
             self.req.reset()
-            
+
             resp_data = replaylib.current.get_next_response(req_hash)
             return PlayingHTTPResponse(resp_data)
     return PlayingConnection
-        
+
 PlayingHTTPConnection = playing_connection(httplib.HTTPConnection)
 PlayingHTTPSConnection = playing_connection(httplib.HTTPSConnection)
 
 
 class PlayingHTTPResponse(object):
+
     def __init__(self, r):
         self.version = r.version
         self.status = r.status
         self.reason = r.reason
         self.msg = r.headers
-        
+
         self.body = StringIO("".join(r.body))
         self.fp = self.body
-        
+
     def getheader(self, name, default=None):
         if self.msg is None:
             raise httplib.ResponseNotReady()

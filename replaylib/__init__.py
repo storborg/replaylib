@@ -20,13 +20,13 @@ class StateError(Exception):
 def install(http, https):
     httplib.HTTPConnection = httplib.HTTP._connection_class = http
     httplib.HTTPSConnection = httplib.HTTPS._connection_class = https
- 
 
 
 def reset():
     global current, playback, record
     httplib.HTTPConnection = httplib.HTTP._connection_class = _HTTPConnection
-    httplib.HTTPSConnection = httplib.HTTPS._connection_class = _HTTPSConnection
+    httplib.HTTPSConnection = httplib.HTTPS._connection_class = \
+            _HTTPSConnection
     current = None
     playback = False
     record = False

@@ -11,6 +11,7 @@ PORT = 9000
 # Filename to use for pickle test.
 TEST_FILENAME = '/tmp/replaylib-test.pkl'
 
+
 class ReferenceServer(Thread):
 
     def __init__(self):
@@ -18,6 +19,7 @@ class ReferenceServer(Thread):
         self.counter = 0
 
         class _Handler(BaseHTTPRequestHandler):
+
             def do_GET(s):
                 self.counter += 1
                 s.send_response(200)
@@ -31,7 +33,7 @@ class ReferenceServer(Thread):
                 pass
 
         self.handler = _Handler
-        
+
     def run(self):
         httpd = HTTPServer(('localhost', PORT), self.handler)
         print "serving..."
@@ -65,16 +67,19 @@ class ReplayFunctionalityTest(TestCase):
         assert real_compare == fake_compare
 
     def test_do_nothing(self):
+
         def func():
             return ''
         self._with_actions(func)
 
     def test_single(self):
+
         def func():
             return self._grab()
         self._with_actions(func)
 
     def test_multiple(self):
+
         def func():
             ret = []
             ret.append(self._grab())
@@ -83,6 +88,7 @@ class ReplayFunctionalityTest(TestCase):
         self._with_actions(func)
 
     def test_different_single(self):
+
         def func():
             ret = []
             ret.append(self._grab('foo'))
@@ -91,6 +97,7 @@ class ReplayFunctionalityTest(TestCase):
         self._with_actions(func)
 
     def test_different_multiple(self):
+
         def func():
             ret = []
             ret.append(self._grab('foo'))
@@ -108,6 +115,7 @@ class ReplayFunctionalityTest(TestCase):
         replaylib.stop_playback()
 
         assert real == fake
+
 
 class ReplayStateTest(TestCase):
 
