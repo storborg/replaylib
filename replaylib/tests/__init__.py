@@ -146,7 +146,7 @@ class ReplayFunctionalityTest(TestCase):
 
     def test_headers(self):
         replaylib.start_record()
-        conn = httplib.HTTPConnection('http://localhost:%d' % PORT)
+        conn = httplib.HTTPConnection('localhost:%d' % PORT)
         conn.request("GET", "/")
         resp = conn.getresponse()
         real_body = resp.read()
@@ -155,7 +155,7 @@ class ReplayFunctionalityTest(TestCase):
         data = replaylib.stop_record_obj()
 
         replaylib.start_playback_obj(data)
-        conn = httplib.HTTPConnection('http://localhost:%d' % PORT)
+        conn = httplib.HTTPConnection('localhost:%d' % PORT)
         conn.request("GET", "/")
         resp = conn.getresponse()
         fake_body = resp.read()
