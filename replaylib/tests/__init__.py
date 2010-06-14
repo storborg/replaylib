@@ -217,6 +217,25 @@ class ReplayFunctionalityTest(TestCase):
         webf.close()
         replaylib.stop_playback()
 
+    def test_read_partial(self):
+        replaylib.start_record()
+        conn = httplib.HTTPConnection('localhost:%d' % PORT)
+        conn.request("GET", "/")
+        resp = conn.getresponse()
+        real = resp.read(2)
+        conn.close()
+        data = replaylib.stop_record_obj()
+
+        replaylib.start_playback_obj(data)
+        conn = httplib.HTTPConnection('localhost:%d' % PORT)
+        conn.request("GET", "/")
+        resp = conn.getresponse()
+        fake = resp.read(2)
+        conn.close()
+        replaylib.stop_playback()
+
+        assert real == fake
+
 
 class ReplayStateTest(TestCase):
 
