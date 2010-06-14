@@ -165,6 +165,7 @@ class ReplayFunctionalityTest(TestCase):
     def test_with_httplib(self):
         replaylib.start_record()
         conn = httplib.HTTPConnection('localhost:%d' % PORT)
+        conn.connect()
         conn.request("GET", "/")
         resp = conn.getresponse()
         real_body = resp.read()
@@ -174,6 +175,7 @@ class ReplayFunctionalityTest(TestCase):
 
         replaylib.start_playback_obj(data)
         conn = httplib.HTTPConnection('localhost:%d' % PORT)
+        conn.connect()
         conn.request("GET", "/")
         resp = conn.getresponse()
         fake_body = resp.read()
@@ -183,6 +185,25 @@ class ReplayFunctionalityTest(TestCase):
 
         assert real_body == fake_body
         assert real_headers == fake_headers
+
+    def test_getheader_with_httplib(self):
+        replaylib.start_record()
+        conn = httplib.HTTPConnection('localhost:%d' % PORT)
+        conn.request("GET", "/")
+        resp = conn.getresponse()
+        real = resp.getheader('Content-type')
+        conn.close()
+        data = replaylib.stop_record_obj()
+
+        replaylib.start_playback_obj(data)
+        conn = httplib.HTTPConnection('localhost:%d' % PORT)
+        conn.request("GET", "/")
+        resp = conn.getresponse()
+        fake = resp.getheader('Content-type')
+        conn.close()
+        replaylib.stop_playback()
+
+        assert real == fake
 
     def test_content_type_header(self):
         replaylib.start_record()
@@ -195,6 +216,25 @@ class ReplayFunctionalityTest(TestCase):
         fake = webf.info().getheader('Content-type')
         webf.close()
         replaylib.stop_playback()
+
+    def test_read_partial(self):
+        replaylib.start_record()
+        conn = httplib.HTTPConnection('localhost:%d' % PORT)
+        conn.request("GET", "/")
+        resp = conn.getresponse()
+        real = resp.read(2)
+        conn.close()
+        data = replaylib.stop_record_obj()
+
+        replaylib.start_playback_obj(data)
+        conn = httplib.HTTPConnection('localhost:%d' % PORT)
+        conn.request("GET", "/")
+        resp = conn.getresponse()
+        fake = resp.read(2)
+        conn.close()
+        replaylib.stop_playback()
+
+        assert real == fake
 
 
 class ReplayStateTest(TestCase):
