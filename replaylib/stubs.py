@@ -84,24 +84,24 @@ RecordingHTTPSConnection = recording_connection(httplib.HTTPSConnection)
 
 class PlayingHTTPConnection(httplib.HTTPConnection):
     def __init__(self):
-        self.head_buffer = []
-        self.body_buffer = []
+        self.req = RecordingHTTPRequest()
     
     def connect(self):
         return
     
     def _output(self, s):
-        self.head_buffer.append(s)
+        self.req.add_header(s)
         
     def _send_output(self):
         return
 
     def send(self, s):
-        if self.__state == httplib._CS_REQ_SENT:
-            self.body_buffer.append(s)
+        if self._HTTPConnection__state == httplib._CS_REQ_SENT:
+            self.req.add_body(s)
 
     def getresponse(self):
-        req_hash = hash_request(self.head_buffer, self.body_buffer)
+        req_hash = self.req.hash
+        self.req.reset()
         resp_data = replaylib.current.get_next_response(req_hash)
         return PlayingHTTPResponse(resp_data)
 
