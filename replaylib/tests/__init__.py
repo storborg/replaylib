@@ -1,5 +1,6 @@
 from unittest import TestCase
 import urllib
+import httplib
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
 
@@ -49,8 +50,11 @@ class ReplayFunctionalityTest(TestCase):
     def tearDown(self):
         replaylib.reset()
 
+    def _urlopen(self, path=''):
+        return urllib.urlopen('http://localhost:%d/%s' % (PORT, path))
+
     def _grab(self, path=''):
-        webf = urllib.urlopen('http://localhost:%d/%s' % (PORT, path))
+        webf = self._urlopen(path)
         buf = webf.read()
         webf.close()
         return buf
@@ -115,6 +119,42 @@ class ReplayFunctionalityTest(TestCase):
         replaylib.stop_playback()
 
         assert real == fake
+
+    def test_readlines(self):
+        replaylib.start_record()
+        webf = self._urlopen()
+        real = webf.readlines()
+        webf.close()
+        data = replaylib.stop_record_obj()
+        replaylib.start_playback_obj(data)
+        webf = self._urlopen()
+        fake = webf.readlines()
+        webf.close()
+        replaylib.stop_playback()
+
+    def test_readline(self):
+        replaylib.start_record()
+        webf = self._urlopen()
+        real = webf.readline()
+        webf.close()
+        data = replaylib.stop_record_obj()
+        replaylib.start_playback_obj(data)
+        webf = self._urlopen()
+        fake = webf.readline()
+        webf.close()
+        replaylib.stop_playback()
+
+    def test_content_type_header(self):
+        replaylib.start_record()
+        webf = self._urlopen()
+        real = webf.info().getheader('Content-type')
+        webf.close()
+        data = replaylib.stop_record_obj()
+        replaylib.start_playback_obj(data)
+        webf = self._urlopen()
+        fake = webf.info().getheader('Content-type')
+        webf.close()
+        replaylib.stop_playback()
 
 
 class ReplayStateTest(TestCase):
