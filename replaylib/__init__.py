@@ -23,9 +23,13 @@ def install(http, https):
  
 
 
-def restore():
+def reset():
+    global current, playback, record
     httplib.HTTPConnection = httplib.HTTP._connection_class = _HTTPConnection
     httplib.HTTPSConnection = httplib.HTTPS._connection_class = _HTTPSConnection
+    current = None
+    playback = False
+    record = False
 
 
 def start_record():
@@ -46,9 +50,8 @@ def stop_record_obj():
     global record, current
     if not record:
         raise StateError("Not currently recording.")
-    record = False
-    copy, current = current, None
-    restore()
+    copy = current
+    reset()
     return copy
 
 
@@ -62,7 +65,7 @@ def stop_record(fname):
 
 
 def start_playback_obj(obj):
-    global record, playback, current
+    global record, playback
     if record:
         raise StateError("Currently recording.")
     if playback:
@@ -84,8 +87,7 @@ def stop_playback():
     """
     Stop intercepting calls and return httplib to its normal state.
     """
-    global playback, current
+    global playback
     if not playback:
         raise StateError("Not currently playing back.")
-    current = None
-    restore()
+    reset()

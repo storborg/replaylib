@@ -27,24 +27,9 @@ class ReferenceServer(Thread):
         httpd.serve_forever()
 
 
-class ReplayTest(TestCase):
+class ReplayFunctionalityTest(TestCase):
 
-    def tearDown(self):
-        try:
-            replaylib.stop_record_obj()
-        except replaylib.StateError:
-            pass
-    
-    def test_already_recording(self):
-        replaylib.start_record()
-        try:
-            replaylib.start_record()
-        except replaylib.StateError:
-            pass
-        else:
-            raise AssertionError("trying to record twice should fail")
-
-    def test_full_basic(self):
+    def test_single(self):
         replaylib.start_record()
 
         server = ReferenceServer()
@@ -69,3 +54,61 @@ class ReplayTest(TestCase):
         replaylib.stop_playback()
 
         assert real_buf == fake_buf
+
+
+class ReplayStateTest(TestCase):
+
+    def setUp(self):
+        replaylib.reset()
+
+    def test_already_recording(self):
+        replaylib.start_record()
+        try:
+            replaylib.start_record()
+        except replaylib.StateError:
+            pass
+        else:
+            raise AssertionError("record twice should fail")
+
+    def test_stop_not_recording(self):
+        try:
+            replaylib.stop_record_obj()
+        except replaylib.StateError:
+            pass
+        else:
+            raise AssertionError("stop recording without start should fail")
+
+    def test_already_playing(self):
+        replaylib.start_playback_obj(replaylib.ReplayData())
+        try:
+            replaylib.start_playback_obj(replaylib.ReplayData())
+        except replaylib.StateError:
+            pass
+        else:
+            raise AssertionError("playback twice should fail")
+
+    def test_stop_not_playing(self):
+        try:
+            replaylib.stop_playback()
+        except replaylib.StateError:
+            pass
+        else:
+            raise AssertionError("stop playback without start should fail")
+
+    def test_playback_while_recording(self):
+        replaylib.start_record()
+        try:
+            replaylib.start_playback_obj(replaylib.ReplayData())
+        except replaylib.StateError:
+            pass
+        else:
+            raise AssertionError("playback during recording should fail")
+
+    def test_record_while_playback(self):
+        replaylib.start_playback_obj(replaylib.ReplayData())
+        try:
+            replaylib.start_record()
+        except replaylib.StateError:
+            pass
+        else:
+            raise AssertionError("record during playback should fail")
