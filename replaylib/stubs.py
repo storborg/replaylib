@@ -169,4 +169,6 @@ class PlayingHTTPResponse(object):
         return self.msg.items()
 
     def read(self, amt=None):
+        if amt is None:
+            return self.body.read()
         return self.body.read(amt)
