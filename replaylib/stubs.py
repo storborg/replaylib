@@ -8,15 +8,18 @@ import replaylib
 
 class RecordingHTTPResponse(httplib.HTTPResponse):
     def __init__(self, *args, **kwargs):
-        httplib.HTTPResponse(*args, **kwargs)
-        self.record_handle = replaylib.current.start_response(self.req_hash)
+        httplib.HTTPResponse(self, *args, **kwargs)
+        self.record_handle = None
+
+    def init_recording(self, req_hash):
+        self.record_handle = replaylib.current.start_response(req_hash)
 
     def begin(self):
-        httplib.HTTPConnection.begin()
+        httplib.HTTPResponse.begin(self)
         self.record_handle.rec_start(self.version, self.status, self.reason, self.msg)
 
     def read(self, amt):
-        s = httplib.HTTPConnection.read(amt)
+        s = httplib.HTTPResponse.read(self, amt)
         self.record_handle.rec_body(s)
         return s
 
@@ -70,7 +73,7 @@ def recording_connection(base_class):
             self.req.reset()
 
             r = base_class.getresponse(self)
-            r.hash = req_hash
+            r.init_recording(req_hash)
             return r
     return RecordingConnection
 
