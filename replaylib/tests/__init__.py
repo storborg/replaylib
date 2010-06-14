@@ -1,5 +1,3 @@
-import sys
-
 from unittest import TestCase
 import urllib
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
@@ -9,6 +7,8 @@ import replaylib
 
 # Port number to use for reference webserver.
 PORT = 9000
+
+# Filename to use for pickle test.
 TEST_FILENAME = '/tmp/replaylib-test.pkl'
 
 class ReferenceServer(Thread):
@@ -16,6 +16,7 @@ class ReferenceServer(Thread):
     def __init__(self):
         Thread.__init__(self)
         self.counter = 0
+
         class _Handler(BaseHTTPRequestHandler):
             def do_GET(s):
                 self.counter += 1
@@ -25,6 +26,10 @@ class ReferenceServer(Thread):
                 resp = '%d requests to %s' % (self.counter, s.path)
                 print resp
                 s.wfile.write(resp)
+
+            def log_message(self, *args):
+                pass
+
         self.handler = _Handler
         
     def run(self):
@@ -43,11 +48,9 @@ class ReplayFunctionalityTest(TestCase):
         replaylib.reset()
 
     def _grab(self, path=''):
-        sys.stderr.write("doing grab [%s]\n" % path)
         webf = urllib.urlopen('http://localhost:%d/%s' % (PORT, path))
         buf = webf.read()
         webf.close()
-        sys.stderr.write("done\n")
         return buf
 
     def _with_actions(self, func):
