@@ -47,6 +47,8 @@ class RecordingHTTPRequest(object):
         
 
 def recording_connection(base_class):
+    state_attr = "_%s__state" % base_class.__name__
+    
     class RecordingConnection(base_class):
         def __init__(self, *args, **kwargs):
             base_class.__init__(self, *args, **kwargs)
@@ -57,7 +59,7 @@ def recording_connection(base_class):
             return base_class._output(self, s)
 
         def send(self, s):
-            if self.__state == httplib._CS_REQ_SENT:
+            if getattr(self, state_attr) == httplib._CS_REQ_SENT:
                 self.req.add_body(s)
             return base_class.send(self, s)
 
