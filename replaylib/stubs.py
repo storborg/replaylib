@@ -8,7 +8,7 @@ import replaylib
 
 class RecordingHTTPResponse(httplib.HTTPResponse):
     def __init__(self, *args, **kwargs):
-        httplib.HTTPResponse(self, *args, **kwargs)
+        httplib.HTTPResponse.__init__(self, *args, **kwargs)
         self.record_handle = None
 
     def init_recording(self, req_hash):
