@@ -1,18 +1,9 @@
 import httplib
 import pickle
 
-"""
-Replay files will be stored as a pickled dict that looks like:
+from .data import ReplayData
 
-    {'<sha1 of canonicalized request data>': ['first response body',
-                                              'second response body',
-                                              'third response body',
-                                              ...],
-     '<sha1 of different request data>': ['first response body',
-                                          'second response body']}
-"""
-current = {}
-
+current = None
 record = False
 playback = False
 
@@ -31,6 +22,7 @@ def start_record():
     if playback:
         raise StateError("Currently playing back.")
     record = True
+    current = ReplayData()
 
     # Install recording httplib stub.
 
@@ -40,7 +32,7 @@ def stop_record_obj():
     if not record:
         raise StateError("Not currently recording.")
     record = False
-    copy, current = current, {}
+    copy, current = current, None
 
     # Return httplib to original state.
 
@@ -83,6 +75,6 @@ def stop_playback():
     global playback, current
     if not playback:
         raise StateError("Not currently playing back.")
-    current = {}
+    current = None
 
     # Return httplib to original state.
