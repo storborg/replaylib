@@ -56,6 +56,10 @@ class RecordingHTTPConnection(httplib.HTTPConnection):
     
 
 class PlayingHTTPConnection(httplib.HTTPConnection):
+    def __init__(self):
+        self.head_buffer = []
+        self.body_buffer = []
+    
     def connect(self):
         return
     
@@ -70,7 +74,7 @@ class PlayingHTTPConnection(httplib.HTTPConnection):
             self.body_buffer.append(s)
 
     def getresponse(self):
-        req_hash = self._current_hash()
+        req_hash = hash_request(self.head_buffer, self.body_buffer)
         resp_data = replaylib.current.get_next_response(req_hash)
         return PlayingHTTPResponse(resp_data)
 
