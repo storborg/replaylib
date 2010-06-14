@@ -17,11 +17,11 @@ def hash_request(header_lines, body_lines):
 
 class RecordingHTTPResponse(httplib.HTTPResponse):
     def __init__(self):
-        self.record_handle = replaylib.current.start_response(self.hash)
+        self.record_handle = replaylib.current.start_response(self.req_hash)
 
     def begin(self):
         httplib.HTTPConnection.begin()
-        self.record_handle.rec_start(self, self.version, self.status, self.reason, self.msg)
+        self.record_handle.rec_start(self.version, self.status, self.reason, self.msg)
 
     def read(self, amt):
         s = httplib.HTTPConnection.read(amt)
