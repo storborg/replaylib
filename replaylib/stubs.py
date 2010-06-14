@@ -6,21 +6,47 @@ from cStringIO import StringIO
 
 import replaylib
 
+
 class RecordingHTTPResponse(httplib.HTTPResponse):
     def __init__(self, *args, **kwargs):
         httplib.HTTPResponse.__init__(self, *args, **kwargs)
         self.record_handle = None
-
+        self._fp = self.fp
+        
     def init_recording(self, req_hash):
         self.record_handle = replaylib.current.start_response(req_hash)
         self.record_handle.rec_start(self.version, self.status, self.reason, self.msg)
-    
-    def read(self, amt):
-        s = httplib.HTTPResponse.read(self, amt)
+        self.fp = self
+        
+    def read(self, amt=None):
+        try:
+            self.fp = self._fp
+            s = httplib.HTTPResponse.read(self, amt)
+        finally:
+            self.fp = self
         self.record_handle.rec_body(s)
         return s
 
+    def readline(self, *args, **kwargs):
+        "Hack so that someone"
+        line = self._fp.readline(*args, **kwargs)
+        self.record_handle.rec_body(line)
+        return line
+    
+    def readlines(self, *args, **kwargs):
+        lines = self._fp.readlines(*args, **kwargs)
+        for l in lines:
+            self.record_handle.rec_body(l)
+        return lines
 
+    def close(self):
+        try:
+            self.fp = self._fp
+            httplib.HTTPResponse.close(self)
+        finally:
+            self.fp = self
+
+    
 class RecordingHTTPRequest(object):
     def __init__(self):
         self.head_buffer = []

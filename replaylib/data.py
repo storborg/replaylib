@@ -15,7 +15,7 @@ Replay maps will be stored as a pickled dict that looks like:
 class ReplayDataResponse(object):
 
     def __init__(self):
-        self.body = ""
+        self.body = []
 
     def rec_start(self, version, status, reason, headers):
         self.version = version

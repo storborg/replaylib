@@ -65,7 +65,7 @@ def stop_record(fname):
 
 
 def start_playback_obj(obj):
-    global record, playback
+    global record, playback, current
     if record:
         raise StateError("Currently recording.")
     if playback:
