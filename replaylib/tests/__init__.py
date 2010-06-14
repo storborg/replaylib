@@ -1,8 +1,12 @@
 from unittest import TestCase
-import replaylib
 import urllib
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
+
+import replaylib
+
+# Port number to use for reference webserver.
+PORT = 9000
 
 
 class ReferenceServer(Thread):
@@ -22,7 +26,7 @@ class ReferenceServer(Thread):
         self.handler = _Handler
         
     def run(self):
-        httpd = HTTPServer(('localhost', 9000), self.handler)
+        httpd = HTTPServer(('localhost', PORT), self.handler)
         print "serving..."
         httpd.serve_forever()
 
@@ -36,7 +40,7 @@ class ReplayFunctionalityTest(TestCase):
         server.start()
 
         # Do some httplib or urllib shit here.
-        webf = urllib.urlopen('http://localhost:9000')
+        webf = urllib.urlopen('http://localhost:%d' % PORT)
         real_buf = webf.read()
         webf.close()
 
@@ -47,7 +51,7 @@ class ReplayFunctionalityTest(TestCase):
         replaylib.start_playback_obj(data)
 
         # Do the same httplib shit again.
-        webf = urllib.urlopen('http://localhost:9000')
+        webf = urllib.urlopen('http://localhost:%d' % PORT)
         fake_buf = webf.read()
         webf.close()
 
