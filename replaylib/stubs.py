@@ -13,11 +13,8 @@ class RecordingHTTPResponse(httplib.HTTPResponse):
 
     def init_recording(self, req_hash):
         self.record_handle = replaylib.current.start_response(req_hash)
-
-    def begin(self):
-        httplib.HTTPResponse.begin(self)
         self.record_handle.rec_start(self.version, self.status, self.reason, self.msg)
-
+    
     def read(self, amt):
         s = httplib.HTTPResponse.read(self, amt)
         self.record_handle.rec_body(s)
