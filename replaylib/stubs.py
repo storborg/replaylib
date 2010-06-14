@@ -44,7 +44,7 @@ class RecordingHTTPRequest(object):
         if req_head.find("application/x-www-form-urlencoded") >= 0:
             body = sorted(urlparse.parse_qsl(req_body))
             req_body = urllib.urlencode(body)
-        return hashlib.md5(req_head + req_body)
+        return hashlib.md5(req_head + req_body).digest()
         
 
 def recording_connection(base_class):
@@ -55,14 +55,18 @@ def recording_connection(base_class):
             base_class.__init__(self, *args, **kwargs)
             self.response_class = RecordingHTTPResponse
             self.req = RecordingHTTPRequest()
+            self.sent_headers = False
 
         def _output(self, s):
             self.req.add_header(s)
             return base_class._output(self, s)
 
         def send(self, s):
-            if getattr(self, state_attr) == httplib._CS_REQ_SENT:
+            if self.sent_headers:
                 self.req.add_body(s)
+                
+            if getattr(self, state_attr) == httplib._CS_REQ_SENT:
+                self.sent_headers = True
             return base_class.send(self, s)
 
         def getresponse(self):
@@ -113,12 +117,14 @@ PlayingHTTPSConnection = playing_connection(httplib.HTTPSConnection)
 
 
 class PlayingHTTPResponse(object):
-    def __init__(self, version, status, reason, msg, body):
-        self.version = version
-        self.status = status
-        self.reason = reason
-        self.msg = msg
-        self.body = StringIO(body)
+    def __init__(self, r):
+        self.version = r.version
+        self.status = r.status
+        self.reason = r.reason
+        self.msg = r.headers
+        
+        self.body = StringIO("".join(r.body))
+        self.fp = self.body
         
     def getheader(self, name, default=None):
         if self.msg is None:

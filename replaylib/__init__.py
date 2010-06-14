@@ -57,7 +57,7 @@ def start_playback_obj(obj):
         raise StateError("Currently recording.")
     if playback:
         raise StateError("Already playing back.")
-    playback = True
+    current, playback = obj, True
     httplib.HTTPConnection = PlayingHTTPConnection
     httplib.HTTP._connection_class = PlayingHTTPConnection
 
