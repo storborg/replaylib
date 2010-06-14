@@ -144,6 +144,28 @@ class ReplayFunctionalityTest(TestCase):
         webf.close()
         replaylib.stop_playback()
 
+    def test_headers(self):
+        replaylib.start_record()
+        conn = httplib.HTTPConnection('http://localhost:%d' % PORT)
+        conn.request("GET", "/")
+        resp = conn.getresponse()
+        real_body = resp.read()
+        real_headers = resp.getheaders()
+        conn.close()
+        data = replaylib.stop_record_obj()
+
+        replaylib.start_playback_obj(data)
+        conn = httplib.HTTPConnection('http://localhost:%d' % PORT)
+        conn.request("GET", "/")
+        resp = conn.getresponse()
+        fake_body = resp.read()
+        fake_headers = resp.getheaders()
+        conn.close()
+        replaylib.stop_playback()
+
+        assert real_body == fake_body
+        assert real_headers == fake_headers
+
     def test_content_type_header(self):
         replaylib.start_record()
         webf = self._urlopen()
