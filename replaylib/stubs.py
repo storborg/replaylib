@@ -93,7 +93,7 @@ def recording_connection(base_class):
         def send(self, s):
             if self.sent_headers:
                 self.req.add_body(s)
-                
+
             assert getattr(self, state_attr) == httplib._CS_REQ_SENT
             self.sent_headers = True
             return base_class.send(self, s)
@@ -154,7 +154,7 @@ class PlayingHTTPResponse(object):
         self.reason = r.reason
         self.msg = r.headers
         assert self.msg is not None
-        
+
         self.body = StringIO(r.body)
         self.fp = self.body
 

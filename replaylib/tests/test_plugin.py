@@ -14,12 +14,15 @@ compare = ''
 
 TEST_FILENAME = '/tmp/replaylib-plugin.pkl'
 
+
 class TestPluginRecording(PluginTester, TestCase):
     plugins = [ReplayLibPlugin()]
     activate = '--replaylib-record=%s' % TEST_FILENAME
-    
+
     def makeSuite(self):
+
         class TC(TestCase):
+
             def runTest(self):
                 global compare
                 webf = urllib.urlopen('http://localhost:%d' % servers.PORT)
@@ -49,9 +52,11 @@ class TestPluginPlayback(PluginTester, TestCase):
         webf.close()
         replaylib.stop_record(TEST_FILENAME)
         PluginTester.setUp(self)
-    
+
     def makeSuite(self):
+
         class TC(TestCase):
+
             def runTest(self):
                 global compare
                 webf = urllib.urlopen('http://localhost:%d' % servers.PORT)
@@ -74,7 +79,9 @@ class TestPluginDisabled(PluginTester, TestCase):
     activate = ''
 
     def makeSuite(self):
+
         class TC(TestCase):
+
             def runTest(self):
                 assert True
         return TestSuite([TC()])

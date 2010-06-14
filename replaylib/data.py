@@ -30,7 +30,7 @@ class ReplayDataResponse(object):
     def body(self):
         return "".join(self.body_chunks)
 
-    
+
 class ReplayData(object):
 
     def __init__(self):

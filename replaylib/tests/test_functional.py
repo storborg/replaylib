@@ -17,7 +17,8 @@ class ReplayFunctionalityTest(TestCase):
         replaylib.reset()
 
     def _urlopen(self, path='', params=None):
-        return urllib.urlopen('http://localhost:%d/%s' % (servers.PORT, path), params)
+        return urllib.urlopen('http://localhost:%d/%s' % (servers.PORT, path),
+                              params)
 
     def _grab(self, path='', params=None):
         webf = self._urlopen(path, params)
@@ -251,6 +252,7 @@ class ReplayStateTest(TestCase):
 
 
 if servers.SSL:
+
     class ReplayFunctionalitySSLTest(TestCase):
 
         def tearDown(self):

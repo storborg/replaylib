@@ -10,7 +10,7 @@ class ReplayLibPlugin(Plugin):
     enabled = False
     name = "replaylib"
     score = 0
-    
+
     def options(self, parser, env=os.environ):
         "Add options to nosetests."
         parser.add_option("--%s-record" % self.name,

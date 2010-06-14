@@ -55,6 +55,7 @@ class ReferenceServer(Thread):
                 pass
 
             if secure:
+
                 def setup(s):
                     s.connection = s.request
                     s.rfile = socket._fileobject(s.request, 'rb', s.rbufsize)
@@ -72,14 +73,16 @@ http_server.start()
 
 
 if SSL:
+
     class SecureHTTPServer(HTTPServer):
+
         def __init__(self, server_address, HandlerClass):
             BaseServer.__init__(self, server_address, HandlerClass)
             ctx = SSL.Context(SSL.SSLv23_METHOD)
-            ctx.use_privatekey_file (TEST_CERT)
+            ctx.use_privatekey_file(TEST_CERT)
             ctx.use_certificate_file(TEST_CERT)
-            self.socket = SSL.Connection(ctx, socket.socket(self.address_family,
-                                                            self.socket_type))
+            self.socket = SSL.Connection(ctx, socket.socket(
+                self.address_family, self.socket_type))
             self.server_bind()
             self.server_activate()
 
