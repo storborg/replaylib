@@ -11,4 +11,8 @@ setup(name='replaylib',
       description='Record and replay httplib actions for testing.',
       packages=find_packages(exclude=['ez_setup', 'tests']),
       test_suite='nose.collector',
-      zip_safe=False)
+      zip_safe=False,
+      entry_points="""
+      [nose.plugins.0.10]
+      replaylib = replaylib.noseplugin:ReplayLibPlugin
+      """)
