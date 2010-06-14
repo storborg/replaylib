@@ -2,10 +2,13 @@ import httplib
 import pickle
 
 from .data import ReplayData
+from .stubs import RecordingHTTPConnection, PlayingHTTPConnection
 
 current = None
 record = False
 playback = False
+_HTTPConnection = httplib.HTTPConnection
+_HTTPSConnection = httplib.HTTPSConnection
 
 
 class StateError(Exception):
@@ -23,8 +26,9 @@ def start_record():
         raise StateError("Currently playing back.")
     record = True
     current = ReplayData()
-
-    # Install recording httplib stub.
+    httplib.HTTPConnection = RecordingHTTPConnection
+    httplib.HTTP._connection_class = RecordingHTTPConnection
+    
 
 
 def stop_record_obj():
@@ -33,9 +37,8 @@ def stop_record_obj():
         raise StateError("Not currently recording.")
     record = False
     copy, current = current, None
-
-    # Return httplib to original state.
-
+    httplib.HTTPConnection = _HTTPConnection
+    httplib.HTTP._connection_class = _HTTPConnection
     return copy
 
 
@@ -55,8 +58,8 @@ def start_playback_obj(obj):
     if playback:
         raise StateError("Already playing back.")
     playback = True
-
-    # Install playback httplib stub.
+    httplib.HTTPConnection = PlayingHTTPConnection
+    httplib.HTTP._connection_class = PlayingHTTPConnection
 
 
 def start_playback(fname):
@@ -76,5 +79,5 @@ def stop_playback():
     if not playback:
         raise StateError("Not currently playing back.")
     current = None
-
-    # Return httplib to original state.
+    httplib.HTTPConnection = _HTTPConnection
+    httplib.HTTP._connection_class = _HTTPConnection
