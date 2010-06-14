@@ -4,7 +4,8 @@ import pickle
 from .data import ReplayData
 from .stubs import (RecordingHTTPConnection,
                     RecordingHTTPSConnection,
-                    PlayingHTTPConnection)
+                    PlayingHTTPConnection,
+                    PlayingHTTPSConnection)
 
 current = None
 record = False
@@ -71,7 +72,7 @@ def start_playback_obj(obj):
     if playback:
         raise StateError("Already playing back.")
     current, playback = obj, True
-    install(PlayingHTTPConnection, None)
+    install(PlayingHTTPConnection, PlayingHTTPSConnection)
 
 
 def start_playback(fname):
