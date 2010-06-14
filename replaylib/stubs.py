@@ -153,19 +153,16 @@ class PlayingHTTPResponse(object):
         self.status = r.status
         self.reason = r.reason
         self.msg = r.headers
-
+        assert self.msg is not None
+        
         self.body = StringIO(r.body)
         self.fp = self.body
 
     def getheader(self, name, default=None):
-        if self.msg is None:
-            raise httplib.ResponseNotReady()
         return self.msg.getheader(name, default)
 
     def getheaders(self):
         """Return list of (header, value) tuples."""
-        if self.msg is None:
-            raise httplib.ResponseNotReady()
         return self.msg.items()
 
     def read(self, amt=None):
