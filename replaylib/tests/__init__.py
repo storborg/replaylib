@@ -9,7 +9,7 @@ import replaylib
 
 # Port number to use for reference webserver.
 PORT = 9000
-
+TEST_FILENAME = '/tmp/replaylib-test.pkl'
 
 class ReferenceServer(Thread):
 
@@ -55,13 +55,16 @@ class ReplayFunctionalityTest(TestCase):
         real_compare = func()
         data = replaylib.stop_record_obj()
 
-        assert len(data.map) > 0
-
         replaylib.start_playback_obj(data)
         fake_compare = func()
         replaylib.stop_playback()
 
         assert real_compare == fake_compare
+
+    def test_do_nothing(self):
+        def func():
+            return ''
+        self._with_actions(func)
 
     def test_single(self):
         def func():
@@ -93,6 +96,15 @@ class ReplayFunctionalityTest(TestCase):
             ret.append(self._grab('baz'))
         self._with_actions(func)
 
+    def test_with_file(self):
+        replaylib.start_record()
+        real = self._grab()
+        replaylib.stop_record(TEST_FILENAME)
+        replaylib.start_playback(TEST_FILENAME)
+        fake = self._grab()
+        replaylib.stop_playback()
+
+        assert real == fake
 
 class ReplayStateTest(TestCase):
 
