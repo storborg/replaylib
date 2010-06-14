@@ -27,7 +27,19 @@ class ReferenceServer(Thread):
                 s.send_header('Content-type', 'text/plain')
                 s.end_headers()
                 resp = '%d requests to %s' % (self.counter, s.path)
-                print resp
+                s.wfile.write(resp)
+
+            def do_POST(s):
+                self.counter += 1
+                s.send_response(200)
+                s.send_header('Content-type', 'text/plain')
+                s.end_headers()
+                content_length = s.headers.getheader('Content-length')
+                if content_length:
+                    body = s.rfile.read(int(content_length))
+                else:
+                    body = ''
+                resp = '%d reqs to %s with %s' % (self.counter, s.path, body)
                 s.wfile.write(resp)
 
             def log_message(self, *args):
@@ -37,7 +49,6 @@ class ReferenceServer(Thread):
 
     def run(self):
         httpd = HTTPServer(('localhost', PORT), self.handler)
-        print "serving..."
         httpd.serve_forever()
 
 
@@ -50,11 +61,11 @@ class ReplayFunctionalityTest(TestCase):
     def tearDown(self):
         replaylib.reset()
 
-    def _urlopen(self, path=''):
-        return urllib.urlopen('http://localhost:%d/%s' % (PORT, path))
+    def _urlopen(self, path='', params=None):
+        return urllib.urlopen('http://localhost:%d/%s' % (PORT, path), params)
 
-    def _grab(self, path=''):
-        webf = self._urlopen(path)
+    def _grab(self, path='', params=None):
+        webf = self._urlopen(path, params)
         buf = webf.read()
         webf.close()
         return buf
@@ -110,6 +121,13 @@ class ReplayFunctionalityTest(TestCase):
             ret.append(self._grab('baz'))
         self._with_actions(func)
 
+    def test_post_single(self):
+
+        def func():
+            params = 'post data'
+            return self._grab('', params=params)
+        self._with_actions(func)
+
     def test_with_file(self):
         replaylib.start_record()
         real = self._grab()
@@ -144,7 +162,7 @@ class ReplayFunctionalityTest(TestCase):
         webf.close()
         replaylib.stop_playback()
 
-    def test_headers(self):
+    def test_with_httplib(self):
         replaylib.start_record()
         conn = httplib.HTTPConnection('localhost:%d' % PORT)
         conn.request("GET", "/")
