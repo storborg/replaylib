@@ -28,18 +28,18 @@ Simple as::
 Example
 =======
 
-    >>> import replaylib
-    >>> import urllib
+>>> import replaylib
+>>> import urllib
 
-    >>> replaylib.start_record()
-    # Do some stuff with urllib.
-    >>> urllib.urlopen('http://www.google.com')
-    >>> replaylib.stop_record('activity.pkl')
+>>> replaylib.start_record()
+# Do some stuff with urllib.
+>>> urllib.urlopen('http://www.google.com')
+>>> replaylib.stop_record('activity.pkl')
 
-    >>> replaylib.start_playback('activity.pkl')
-    # Won't actually make a request to google.com
-    >>> urllib.urlopen('http://www.google.com')
-    >>> replaylib.stop_playback()
+>>> replaylib.start_playback('activity.pkl')
+# Won't actually make a request to google.com
+>>> urllib.urlopen('http://www.google.com')
+>>> replaylib.stop_playback()
 
 Nose Plugin
 ===========
