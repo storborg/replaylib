@@ -2,6 +2,7 @@ import hashlib
 import urlparse
 import urllib
 import httplib
+import socket
 from cStringIO import StringIO
 
 import replaylib
@@ -75,75 +76,86 @@ class RecordingHTTPRequest(object):
         return hashlib.md5(req_head + req_body).digest()
 
 
-def recording_connection(base_class):
-    state_attr = "_%s__state" % base_class.__name__
-
-    class RecordingConnection(base_class):
-
-        def __init__(self, *args, **kwargs):
-            base_class.__init__(self, *args, **kwargs)
-            self.response_class = RecordingHTTPResponse
-            self.req = RecordingHTTPRequest(self.host, self.port)
-            self.sent_headers = False
-
-        def _output(self, s):
-            self.req.add_header(s)
-            return base_class._output(self, s)
-
-        def send(self, s):
-            if self.sent_headers:
-                self.req.add_body(s)
-
-            assert getattr(self, state_attr) == httplib._CS_REQ_SENT
-            self.sent_headers = True
-            return base_class.send(self, s)
-
-        def getresponse(self):
-            req_hash = self.req.hash
-            self.req.reset()
-
-            r = base_class.getresponse(self)
-            r.init_recording(req_hash)
-            return r
-    return RecordingConnection
+_http_connection = httplib.HTTPConnection
+_https_connection = httplib.HTTPSConnection
 
 
-RecordingHTTPConnection = recording_connection(httplib.HTTPConnection)
-RecordingHTTPSConnection = recording_connection(httplib.HTTPSConnection)
+class RecordingHTTPConnection(_http_connection):
 
+    def __init__(self, *args, **kwargs):
+        _http_connection.__init__(self, *args, **kwargs)
+        self.response_class = RecordingHTTPResponse
+        self.req = RecordingHTTPRequest(self.host, self.port)
+        self.sent_headers = False
 
-def playing_connection(base_class):
-    state_attr = "_%s__state" % base_class.__name__
+    def _output(self, s):
+        self.req.add_header(s)
+        return _http_connection._output(self, s)
 
-    class PlayingConnection(httplib.HTTPConnection):
-
-        def __init__(self, *args, **kwargs):
-            base_class.__init__(self, *args, **kwargs)
-            self.req = RecordingHTTPRequest(self.host, self.port)
-
-        def connect(self):
-            return
-
-        def _output(self, s):
-            self.req.add_header(s)
-
-        def _send_output(self):
-            return
-
-        def send(self, s):
-            assert getattr(self, state_attr) == httplib._CS_REQ_SENT
+    def send(self, s):
+        if self.sent_headers:
             self.req.add_body(s)
 
-        def getresponse(self):
-            req_hash = self.req.hash
-            self.req.reset()
+        assert self._HTTPConnection__state == httplib._CS_REQ_SENT
+        self.sent_headers = True
+        return _http_connection.send(self, s)
 
-            resp_data = replaylib.current.get_next_response(req_hash)
-            return PlayingHTTPResponse(resp_data)
-    return PlayingConnection
+    def getresponse(self):
+        req_hash = self.req.hash
+        self.req.reset()
 
-PlayingHTTPConnection = playing_connection(httplib.HTTPConnection)
-PlayingHTTPSConnection = playing_connection(httplib.HTTPSConnection)
+        r = _http_connection.getresponse(self)
+        r.init_recording(req_hash)
+        return r
+
+
+class RecordingHTTPSConnection(RecordingHTTPConnection, _https_connection):
+        default_port = httplib.HTTPS_PORT
+
+        def __init__(self, host, port=None, key_file=None, cert_file=None,
+                     strict=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
+            RecordingHTTPConnection.__init__(self, host, port, strict, timeout)
+            self.key_file = key_file
+            self.cert_file = cert_file
+
+        connect = _https_connection.connect
+
+
+class PlayingHTTPConnection(_http_connection):
+
+    def __init__(self, *args, **kwargs):
+        _http_connection.__init__(self, *args, **kwargs)
+        self.req = RecordingHTTPRequest(self.host, self.port)
+
+    def connect(self):
+        return
+
+    def _output(self, s):
+        self.req.add_header(s)
+
+    def _send_output(self):
+        return
+
+    def send(self, s):
+        assert self._HTTPConnection__state == httplib._CS_REQ_SENT
+        self.req.add_body(s)
+
+    def getresponse(self):
+        req_hash = self.req.hash
+        self.req.reset()
+
+        resp_data = replaylib.current.get_next_response(req_hash)
+        return PlayingHTTPResponse(resp_data)
+
+
+class PlayingHTTPSConnection(PlayingHTTPConnection):
+    default_port = httplib.HTTPS_PORT
+
+    def __init__(self, host, port=None, key_file=None, cert_file=None,
+                 strict=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
+        PlayingHTTPConnection.__init__(self, host, port, strict, timeout)
+        self.key_file = key_file
+        self.cert_file = cert_file
 
 
 class PlayingHTTPResponse(object):
