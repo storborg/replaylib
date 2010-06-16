@@ -22,6 +22,10 @@ Installation
 
 Simple as::
 
+    $ easy_install replaylib
+
+Or if you prefer, download the source and then::
+
     $ python setup.py build
     $ python setup.py install
 
