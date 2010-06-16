@@ -1,3 +1,8 @@
+# Test coverage files.
 .coverage
 cover/
+
+# Setuptools stuff.
 replaylib.egg-info/
+build/
+dist/
