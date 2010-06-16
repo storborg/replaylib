@@ -51,4 +51,11 @@ interactions used by your test suites even simpler::
     $ nosetests --replaylib-playback=test.pkl
 
 
+License
+=======
+
+ReplayLib is released under the GNU General Public License (GPL). See the
+LICENSE file for full text of the license.
+
+
 .. # vim: syntax=rst expandtab tabstop=4 shiftwidth=4 shiftround
