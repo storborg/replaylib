@@ -11,9 +11,12 @@ except ImportError:
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
+import replaylib
+
            
 setup(name='replaylib',
-      version='0.1',
+      version=replaylib.__version__,
       author="Scott Torborg, Mike Spindel",
       author_email="storborg@mit.edu",
       license="GPL",

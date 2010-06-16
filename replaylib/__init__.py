@@ -7,6 +7,9 @@ from .stubs import (RecordingHTTPConnection,
                     PlayingHTTPConnection,
                     PlayingHTTPSConnection)
 
+
+__version__ = '0.1'
+
 current = None
 record = False
 playback = False
