@@ -143,8 +143,12 @@ class PlayingHTTPConnection(_http_connection):
     def getresponse(self):
         req_hash = self.req.hash
         self.req.reset()
-
-        resp_data = replaylib.current.get_next_response(req_hash)
+        
+        try:
+            resp_data = replaylib.current.get_next_response(req_hash)
+        except IndexError:
+            raise replaylib.UnknownRequestError(u"Received a request which "
+                                                u"has not been recorded.")
         return PlayingHTTPResponse(resp_data)
 
 

@@ -18,6 +18,10 @@ class StateError(Exception):
     pass
 
 
+class UnknownRequestError(Exception):
+    pass
+
+
 def install(http, https):
     httplib.HTTPConnection = httplib.HTTP._connection_class = http
     httplib.HTTPSConnection = httplib.HTTPS._connection_class = https

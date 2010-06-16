@@ -84,6 +84,19 @@ class ReplayFunctionalityTest(TestCase):
             return self._grab('', params=params)
         self._with_actions(func)
 
+    def test_playback_unknown_request(self):
+        replaylib.start_record()
+        real = self._grab()
+        data = replaylib.stop_record_obj()
+        replaylib.start_playback_obj(data)
+        try:
+            fake = self._grab(params='post data')
+        except replaylib.UnknownRequestError:
+            pass
+        else:
+            raise AssertionError("unknown request should fail")
+        replaylib.stop_playback()
+
     def test_with_file(self):
         replaylib.start_record()
         real = self._grab()
