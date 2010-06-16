@@ -1,5 +1,5 @@
 ==================================================================================
-replaylib - Make better tests when using remote services
+replaylib - Make better tests when using remote HTTP services
 ==================================================================================
 
 :Authors:
@@ -13,7 +13,14 @@ play them back. Because urllib depends on httplib functionality, replaylib
 will record and play back urllib interactions as well.
 
 It is intended to allow streamlined tests for services which interact with
-remote services: e.g. payment processors, shipping APIs, etc.
+remote services: e.g. payment processors, shipping APIs, etc. To use it, just:
+
+1. Run your test suite while recording with replaylib.
+2. On subsequent runs, play back from replaylib. Tests will run faster, and
+   won't require external services.
+
+It is fully tested, with 100% line and branch coverage, and works well with all
+APIs we have tried it on "in the wild".
 
 *Note* Use at your own risk!
 
