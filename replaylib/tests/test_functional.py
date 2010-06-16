@@ -1,4 +1,5 @@
 from unittest import TestCase
+from nose.plugins.skip import SkipTest
 
 import urllib
 import httplib
@@ -264,24 +265,25 @@ class ReplayStateTest(TestCase):
             raise AssertionError("record during playback should fail")
 
 
-if servers.SSL:
 
-    class ReplayFunctionalitySSLTest(TestCase):
+class ReplayFunctionalitySSLTest(TestCase):
 
-        def tearDown(self):
-            replaylib.reset()
+    def tearDown(self):
+        replaylib.reset()
 
-        def test_single(self):
-            replaylib.start_record()
-            webf = urllib.urlopen('https://localhost:%d' % servers.SECURE_PORT)
-            real_compare = webf.read()
-            webf.close()
-            data = replaylib.stop_record_obj()
+    def test_single(self):
+        if not servers.SSL:
+            raise SkipTest
+        replaylib.start_record()
+        webf = urllib.urlopen('https://localhost:%d' % servers.SECURE_PORT)
+        real_compare = webf.read()
+        webf.close()
+        data = replaylib.stop_record_obj()
 
-            replaylib.start_playback_obj(data)
-            webf = urllib.urlopen('https://localhost:%d' % servers.SECURE_PORT)
-            fake_compare = webf.read()
-            webf.close()
-            replaylib.stop_playback()
+        replaylib.start_playback_obj(data)
+        webf = urllib.urlopen('https://localhost:%d' % servers.SECURE_PORT)
+        fake_compare = webf.read()
+        webf.close()
+        replaylib.stop_playback()
 
-            assert real_compare == fake_compare
+        assert real_compare == fake_compare
